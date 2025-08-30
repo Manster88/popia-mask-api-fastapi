@@ -1,0 +1,175 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "POPIA Masking API",
+    "description": "A POPIA-friendly data masking service for South Africa. Mask, tokenize, or validate personal information before storage.\n\n**Endpoints:**\n- `/mask` → Mask any JSON payload\n- `/mask/batch` → Mask an array of objects in one request\n- `/validate/id` → Validate South African ID numbers\n- `/health` → Check API uptime",
+    "version": "1.1.0",
+    "contact": {
+      "name": "Your Name",
+      "url": "https://yourdomain.com",
+      "email": "support@yourdomain.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://yourapi-host.com/v1",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/mask": {
+      "post": {
+        "summary": "Mask personal information in a JSON payload",
+        "description": "Accepts arbitrary JSON and applies POPIA-friendly data masking.",
+        "operationId": "maskData",
+        "security": [{ "api_key": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MaskRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Masked payload",
+            "content": {
+              "application/json": {
+                "example": {
+                  "masked": {
+                    "email": "t****@example.co.za",
+                    "mobile": "072*****67",
+                    "idNumber": "9002********85"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mask/batch": {
+      "post": {
+        "summary": "Mask an array of JSON objects",
+        "description": "Submit an array of records, each will be masked using the chosen strategy.",
+        "operationId": "maskBatch",
+        "security": [{ "api_key": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BatchMaskRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Array of masked payloads",
+            "content": {
+              "application/json": {
+                "example": {
+                  "masked": [
+                    { "email": "j****@mail.com", "mobile": "082*****12" },
+                    { "email": "s****@mail.com", "mobile": "073*****34" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validate/id": {
+      "post": {
+        "summary": "Validate a South African ID number",
+        "description": "Checks checksum and birthdate validity of an SA ID number.",
+        "operationId": "validateId",
+        "security": [{ "api_key": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IdValidationRequest" },
+              "example": { "idNumber": "9002205800085" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "example": {
+                  "idNumber": "9002205800085",
+                  "valid": true,
+                  "reason": "Checksum valid, birthdate valid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Check API uptime (always returns 200 OK if running).",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Healthy",
+            "content": {
+              "application/json": {
+                "example": { "status": "ok", "service": "POPIA Masking API" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MaskRequest": {
+        "type": "object",
+        "properties": {
+          "payload": { "type": "object" },
+          "strategy": {
+            "type": "string",
+            "enum": ["redact", "partial", "tokenize"]
+          }
+        },
+        "required": ["payload"]
+      },
+      "BatchMaskRequest": {
+        "type": "object",
+        "properties": {
+          "payloads": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "strategy": {
+            "type": "string",
+            "enum": ["redact", "partial", "tokenize"]
+          }
+        },
+        "required": ["payloads"]
+      },
+      "IdValidationRequest": {
+        "type": "object",
+        "properties": {
+          "idNumber": { "type": "string" }
+        },
+        "required": ["idNumber"]
+      }
+    },
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "X-RapidAPI-Key",
+        "in": "header"
+      }
+    }
+  }
+}
